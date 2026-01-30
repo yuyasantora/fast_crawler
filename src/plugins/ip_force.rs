@@ -67,25 +67,26 @@ pub struct SearchResult {
 
 pub async fn search_judgments(
     keyword: Option<&str>,
-    kenri: Option<&str>,
+    _kenri: Option<&str>,
     limit: usize,
 ) -> Result<Vec<SearchResult>> {
     let client = Client::new();
 
-    // URL 構築
-    let mut url = "https://ipforce.jp/Hanketsu/search".to_string();
-    if let Some(k) = kenri {
-        url = format!("{}/kenri/{}", url, k);
-    }
+    // URL 構築 - IP Force のサーバー側検索を使用
+    let url = match keyword {
+        Some(kw) => format!(
+            "https://ipforce.jp/Hanketsu/search/keyword/{}",
+            urlencoding::encode(kw)
+        ),
+        None => "https://ipforce.jp/Hanketsu/search".to_string(),
+    };
 
     println!("🔍 Searching: {}", url);
 
     let body = client.get(&url).send().await?.text().await?;
     let document = Html::parse_document(&body);
 
-    // 判決リストのセレクタ（IP Force の構造に合わせて調整が必要）
-    let row_selector = Selector::parse("div.hanketsu_list_item, tr.hanketsu_row, a[href*='/Hanketsu/jiken/no/']").unwrap();
-    let link_selector = Selector::parse("a[href*='/Hanketsu/jiken/no/']").unwrap();
+    let link_selector = Selector::parse("span.name a[href*='/Hanketsu/jiken/no/']").unwrap();
 
     let mut results = Vec::new();
 
@@ -100,17 +101,14 @@ pub async fn search_judgments(
                 if let Ok(case_id) = id_str.trim_matches('/').parse::<u32>() {
                     let title = elem.text().collect::<Vec<_>>().join("").trim().to_string();
 
-                    // キーワードフィルタ
-                    if let Some(kw) = keyword {
-                        if !title.contains(kw) {
-                            continue;
-                        }
+                    if title.is_empty() {
+                        continue;
                     }
 
                     results.push(SearchResult {
                         case_id,
                         title,
-                        date: String::new(), // 日付は別途取得が必要
+                        date: String::new(),
                     });
                 }
             }
@@ -150,7 +148,7 @@ impl WebResource for IpForcePatent {
 
         // LLMのトークン制限を考慮して、適当な長さに切り詰める
         // (本来はもっと賢い分割処理が必要)
-        let safe_length = 15000;
+        let safe_length = 5000;
         let truncated: String = text.chars().take(safe_length).collect();
 
         Ok(truncated)

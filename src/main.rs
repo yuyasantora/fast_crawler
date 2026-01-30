@@ -19,6 +19,7 @@ use std::process::Command;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::ServeDir;
 use traits::WebResource;
 
 // 共有状態
@@ -225,6 +226,7 @@ async fn main() -> Result<()> {
         .route("/analyze", post(analyze))
         .route("/search", post(search))
         .route("/pdf/:case_id", get(download_pdf))
+        .fallback_service(ServeDir::new("frontend/dist"))
         .layer(cors)
         .with_state(state);
 
