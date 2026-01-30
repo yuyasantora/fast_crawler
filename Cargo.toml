@@ -1,0 +1,31 @@
+[package]
+name = "my_legal_engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 非同期・Web・エラー処理
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+
+# REST API
+axum = "0.7"
+tower-http = { version = "0.5", features = ["cors"] }
+tokio-util = { version = "0.7", features = ["io"] }
+scraper = "0.18"
+anyhow = "1.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+async-trait = "0.1"
+regex = "1"
+
+# テンプレート・PDF
+askama = { version = "0.12", features = ["serde-json"] }
+
+# AI / Candle (Rust Native Inference)
+candle-core = { version = "0.8", features = ["cuda"] }
+candle-transformers = { version = "0.8", features = ["cuda"] }
+candle-nn = { version = "0.8", features = ["cuda"] }
+tokenizers = "0.21"
+hf-hub = "0.4"
+rand = "0.8"

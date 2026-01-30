@@ -1,0 +1,26 @@
+# Rust
+/target/
+Cargo.lock
+
+# Output
+/output/
+
+# Environment
+.env
+.env.local
+
+# HuggingFace cache
+.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
