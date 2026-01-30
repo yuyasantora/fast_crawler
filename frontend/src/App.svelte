@@ -73,8 +73,10 @@
 </script>
 
 <main>
-  <h1>My Legal Engine</h1>
-  <p class="subtitle">特許判決検索・分析システム</p>
+  <div class="header">
+    <h1>Patent Researcher</h1>
+    <p class="subtitle">特許判決検索・分析システム</p>
+  </div>
 
   <div class="search-box">
     <input
@@ -95,7 +97,7 @@
   {#if analyzing}
     <div class="loading-overlay">
       <div class="spinner"></div>
-      <p>AI分析中...</p>
+      <p>AI分析中 + PDF生成中...</p>
     </div>
   {/if}
 
@@ -145,59 +147,85 @@
     padding: 1rem 2rem;
   }
 
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
   h1 {
-    color: #333;
-    margin: 0 0 0.25rem 0;
+    color: #fff;
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+    font-size: 2.5rem;
+    letter-spacing: 0.02em;
   }
 
   .subtitle {
-    color: #666;
-    margin: 0 0 1.5rem 0;
+    color: #888;
+    margin: 0;
+    font-size: 0.9rem;
   }
 
   .search-box {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .search-box input {
     flex: 1;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
     font-size: 1rem;
+    color: #e0e0e0;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus {
+    outline: none;
+    border-color: #6a9fd9;
+  }
+
+  .search-box input::placeholder {
+    color: #666;
   }
 
   .search-box button {
     padding: 0.75rem 1.5rem;
-    background: #4a90d9;
+    background: linear-gradient(135deg, #4a90d9, #357abd);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
+    transition: transform 0.1s, box-shadow 0.2s;
   }
 
   .search-box button:hover:not(:disabled) {
-    background: #357abd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 217, 0.3);
   }
 
   .search-box button:disabled {
-    background: #999;
+    background: #444;
     cursor: not-allowed;
   }
 
   .error {
-    background: #fee;
-    color: #c00;
+    background: #3a2020;
+    color: #ff6b6b;
     padding: 1rem;
-    border-radius: 4px;
+    border-radius: 6px;
     margin-bottom: 1rem;
+    border: 1px solid #4a2020;
   }
 
   .results h2 {
     margin-bottom: 1rem;
+    color: #ccc;
+    font-weight: 400;
   }
 
   table {
@@ -206,39 +234,42 @@
   }
 
   th, td {
-    padding: 0.75rem;
+    padding: 0.875rem;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #333;
   }
 
   th {
-    background: #f5f5f5;
-    font-weight: 600;
+    background: #252525;
+    font-weight: 500;
+    color: #aaa;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
   }
 
-  .title-cell {
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  tbody tr:hover {
+    background: #252525;
   }
 
   .analyze-btn {
     padding: 0.5rem 1rem;
-    background: #28a745;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
+    transition: transform 0.1s, box-shadow 0.2s;
   }
 
   .analyze-btn:hover:not(:disabled) {
-    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
   }
 
   .analyze-btn:disabled {
-    background: #999;
+    background: #444;
     cursor: not-allowed;
   }
 
@@ -247,25 +278,31 @@
     justify-content: center;
     align-items: center;
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     padding: 1rem 0;
+  }
+
+  .pagination span {
+    color: #888;
   }
 
   .pagination button {
     padding: 0.5rem 1rem;
-    background: #4a90d9;
-    color: white;
-    border: none;
+    background: #333;
+    color: #ccc;
+    border: 1px solid #444;
     border-radius: 4px;
     cursor: pointer;
+    transition: background 0.2s;
   }
 
   .pagination button:hover:not(:disabled) {
-    background: #357abd;
+    background: #444;
   }
 
   .pagination button:disabled {
-    background: #ccc;
+    background: #222;
+    color: #555;
     cursor: not-allowed;
   }
 
@@ -275,7 +312,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -284,18 +321,19 @@
   }
 
   .loading-overlay p {
-    color: white;
-    margin-top: 1rem;
-    font-size: 1.2rem;
+    color: #ccc;
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
   }
 
   .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #fff;
-    border-top: 4px solid #4a90d9;
+    width: 48px;
+    height: 48px;
+    border: 3px solid #333;
+    border-top: 3px solid #4a90d9;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
   }
 
   @keyframes spin {
