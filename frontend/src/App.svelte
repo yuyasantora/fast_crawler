@@ -13,11 +13,6 @@
   $: pagedResults = results.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
 
   async function search() {
-    if (!keyword) {
-      error = 'キーワードを入力してください';
-      return;
-    }
-
     loading = true;
     error = '';
     results = [];
@@ -27,7 +22,7 @@
       const res = await fetch(`${API_BASE}/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword, limit: 100 })
+        body: JSON.stringify({ keyword: keyword || null, limit: 100 })
       });
       const data = await res.json();
 

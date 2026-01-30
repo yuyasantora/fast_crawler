@@ -71,19 +71,23 @@ pub async fn search_judgments(
     limit: usize,
 ) -> Result<Vec<SearchResult>> {
     let client = Client::new();
+    let url = "https://ipforce.jp/Hanketsu/search";
 
-    // URL 構築 - IP Force のサーバー側検索を使用
-    let url = match keyword {
-        Some(kw) => format!(
-            "https://ipforce.jp/Hanketsu/search/keyword/{}",
-            urlencoding::encode(kw)
-        ),
-        None => "https://ipforce.jp/Hanketsu/search".to_string(),
-    };
+    println!("🔍 Searching: {} (butsu={})", url, keyword.unwrap_or(""));
 
-    println!("🔍 Searching: {}", url);
+    // POST リクエストで検索
+    let mut form = vec![
+        ("ruikei[]", "0"),  // 民事
+        ("ruikei[]", "1"),  // 審決取消訴訟
+    ];
 
-    let body = client.get(&url).send().await?.text().await?;
+    let keyword_owned: String;
+    if let Some(kw) = keyword {
+        keyword_owned = kw.to_string();
+        form.push(("butsu", &keyword_owned));
+    }
+
+    let body = client.post(url).form(&form).send().await?.text().await?;
     let document = Html::parse_document(&body);
 
     let link_selector = Selector::parse("span.name a[href*='/Hanketsu/jiken/no/']").unwrap();
