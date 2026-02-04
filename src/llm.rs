@@ -3,8 +3,11 @@ use candle_core::{quantized::gguf_file, Device, Tensor};
 use candle_transformers::generation::LogitsProcessor;
 use candle_transformers::models::quantized_qwen2 as model;
 use hf_hub::{api::tokio::Api, Repo, RepoType};
+use serde::de::DeserializeOwned;
 use std::io::Write;
-use tokenizers::Tokenizer; // print!で逐次出力するため
+use tokenizers::Tokenizer;
+
+use crate::json_utils::{extract_json, repair_json};
 
 pub struct LlmEngine {
     model: model::ModelWeights,
@@ -143,5 +146,71 @@ impl LlmEngine {
             .decode(&generated_tokens, true)
             .map_err(|e| anyhow!(e))?;
         Ok(result)
+    }
+
+    /// JSON出力を生成してパース（修復・リトライ付き）
+    pub fn generate_json<T: DeserializeOwned>(
+        &mut self,
+        system: &str,
+        user: &str,
+        max_retries: usize,
+    ) -> Result<T> {
+        let mut last_error = String::new();
+
+        for attempt in 0..=max_retries {
+            // リトライ時はエラー情報を追加
+            let user_prompt = if attempt == 0 {
+                user.to_string()
+            } else {
+                println!("🔄 Retry {}/{}...", attempt, max_retries);
+                format!(
+                    "{}\n\n---\n⚠️ 前回の出力でJSONパースエラー: {}\n\
+                    正しいJSON形式で再出力してください。",
+                    user, last_error
+                )
+            };
+
+            // LLM生成
+            let raw_output = self.generate(system, &user_prompt)?;
+
+            // JSON抽出
+            let json_str = extract_json(&raw_output);
+
+            // パース試行
+            match serde_json::from_str::<T>(&json_str) {
+                Ok(parsed) => {
+                    if attempt > 0 {
+                        println!("✅ JSON parse succeeded on retry");
+                    }
+                    return Ok(parsed);
+                }
+                Err(parse_err) => {
+                    // 修復を試みる
+                    println!("⚠️ JSON parse failed ({}), attempting repair...", parse_err);
+                    let repaired = repair_json(&json_str);
+
+                    match serde_json::from_str::<T>(&repaired) {
+                        Ok(parsed) => {
+                            println!("✅ JSON parse succeeded after repair");
+                            return Ok(parsed);
+                        }
+                        Err(repair_err) => {
+                            last_error = format!("{}", repair_err);
+                            println!(
+                                "❌ Repair failed: {}\nJSON preview: {}...",
+                                last_error,
+                                json_str.chars().take(200).collect::<String>()
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        Err(anyhow!(
+            "JSON parse failed after {} retries. Last error: {}",
+            max_retries,
+            last_error
+        ))
     }
 }

@@ -1,3 +1,4 @@
+mod json_utils;
 mod llm;
 mod plugins;
 mod summarizer;
@@ -171,17 +172,17 @@ async fn process_case(state: &AppState, case_id: u32) -> Result<(String, String,
     let judgment_text = patent.fetch_and_extract().await?;
     println!("📄 Fetched {} chars", judgment_text.len());
 
-    // 2. LLM で分析
+    // 2. LLM で分析 + JSONパース（修復・リトライ付き）
     let system_prompt = patent.system_prompt();
     println!("🤖 Analyzing with LLM...");
-    let llm_output = {
+    let parsed: IpForcePatent = {
         let mut llm = state.llm.lock().await;
-        llm.generate(&system_prompt, &judgment_text)?
+        llm.generate_json(&system_prompt, &judgment_text, 2)?
     };
     println!("🤖 LLM done");
 
-    // 3. JSON パース
-    patent.load_llm_data(&llm_output)?;
+    // 3. パース済みデータを適用
+    patent.update_from_parsed(parsed);
     println!("📊 Parsed: {}", patent.title);
 
     // 4. Typst レンダリング

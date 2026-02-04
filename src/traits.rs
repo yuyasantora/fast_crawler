@@ -12,9 +12,6 @@ pub trait WebResource {
     /// システムプロンプトを取得する
     fn system_prompt(&self) -> String;
 
-    /// LLMの出力結果(JSON文字列)を自身の構造体にロードする
-    fn load_llm_data(&mut self, llm_output: &str) -> Result<()>;
-
     /// Typstソースコードをレンダリングして返す
     fn render(&self) -> Result<String>;
 }

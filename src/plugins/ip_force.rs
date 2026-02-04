@@ -1,6 +1,6 @@
 use crate::summarizer::Summarizer;
 use crate::traits::WebResource;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use askama::Template;
 use async_trait::async_trait;
 use reqwest::Client;
@@ -54,6 +54,17 @@ impl IpForcePatent {
             keywords: vec![],
             claim_chart: vec![],
         }
+    }
+
+    /// パース済みデータからフィールドを更新
+    pub fn update_from_parsed(&mut self, data: IpForcePatent) {
+        self.title = data.title;
+        self.case_no = data.case_no;
+        self.date = data.date;
+        self.result = data.result;
+        self.summary = data.summary;
+        self.keywords = data.keywords;
+        self.claim_chart = data.claim_chart;
     }
 }
 
@@ -210,33 +221,6 @@ impl WebResource for IpForcePatent {
         // 実行時にファイルから読み込む
         fs::read_to_string("prompts/ip_force.md")
             .unwrap_or_else(|_| "You are a helpful assistant.".to_string())
-    }
-
-    fn load_llm_data(&mut self, llm_output: &str) -> Result<()> {
-        // ```json ... ``` からJSON部分を抽出
-        let json_str = if let Some(start) = llm_output.find('{') {
-            if let Some(end) = llm_output.rfind('}') {
-                &llm_output[start..=end]
-            } else {
-                llm_output
-            }
-        } else {
-            llm_output
-        };
-
-        let data: IpForcePatent =
-            serde_json::from_str(json_str).context("Failed to parse LLM JSON output")?;
-
-        // 自身のフィールドを更新
-        self.title = data.title;
-        self.case_no = data.case_no;
-        self.date = data.date;
-        self.result = data.result;
-        self.summary = data.summary;
-        self.keywords = data.keywords;
-        self.claim_chart = data.claim_chart;
-
-        Ok(())
     }
 
     fn render(&self) -> Result<String> {
