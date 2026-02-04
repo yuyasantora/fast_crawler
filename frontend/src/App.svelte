@@ -95,8 +95,15 @@
     }
   }
 
-  function downloadPdf(caseId) {
-    window.open(`${API_BASE}/pdf/${caseId}`, '_blank');
+  async function downloadPdf(caseId) {
+    const res = await fetch(`${API_BASE}/pdf/${caseId}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `patent_${caseId}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 </script>
 

@@ -1,5 +1,6 @@
 mod llm;
 mod plugins;
+mod summarizer;
 mod traits;
 
 use anyhow::Result;

@@ -1,3 +1,4 @@
+use crate::summarizer::Summarizer;
 use crate::traits::WebResource;
 use anyhow::{Context, Result};
 use askama::Template;
@@ -181,12 +182,28 @@ impl WebResource for IpForcePatent {
             document.root_element().text().collect::<Vec<_>>().join(" ")
         };
 
-        // LLMのトークン制限を考慮して、適当な長さに切り詰める
-        // (本来はもっと賢い分割処理が必要)
-        let safe_length = 5000;
-        let truncated: String = text.chars().take(safe_length).collect();
+        // 論理的読解法ベースの要約で重要文を抽出
+        let safe_length = 6000;
+        let extracted = match Summarizer::new() {
+            Ok(summarizer) => {
+                match summarizer.extract(&text, safe_length) {
+                    Ok(summary) => {
+                        println!("📝 Summarized: {} → {} chars", text.chars().count(), summary.chars().count());
+                        summary
+                    }
+                    Err(e) => {
+                        println!("⚠️ Summarization failed, falling back to truncation: {}", e);
+                        text.chars().take(safe_length).collect()
+                    }
+                }
+            }
+            Err(e) => {
+                println!("⚠️ Summarizer init failed, falling back to truncation: {}", e);
+                text.chars().take(safe_length).collect()
+            }
+        };
 
-        Ok(truncated)
+        Ok(extracted)
     }
 
     fn system_prompt(&self) -> String {
