@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PatentJudgmentAnalysis",
+  "type": "object",
+  "required": ["case_info", "irac", "claim_chart"],
+  "properties": {
+    "case_info": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "事件名" },
+        "case_no": { "type": "string", "description": "事件番号" },
+        "court": { "type": "string", "description": "裁判所" },
+        "date": { "type": "string", "description": "判決日 (YYYY-MM-DD)" },
+        "result": { "type": "string", "description": "主文の要旨" },
+        "patent_no": { "type": "string", "description": "対象特許番号" }
+      }
+    },
+    "irac": {
+      "type": "object",
+      "properties": {
+        "issue": {
+          "type": "object",
+          "properties": {
+            "plaintiff_claim": { "type": "string", "description": "原告の請求内容" },
+            "accused_product": { "type": "string", "description": "被告製品/方法の概要" },
+            "key_disputes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "主要な争点"
+            }
+          }
+        },
+        "rule": {
+          "type": "object",
+          "properties": {
+            "applicable_law": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "適用条文"
+            },
+            "claim_construction": { "type": "string", "description": "クレーム解釈の要点" }
+          }
+        },
+        "analysis": {
+          "type": "object",
+          "properties": {
+            "infringement_type": {
+              "type": "string",
+              "enum": ["literal", "equivalents", "indirect", "none"],
+              "description": "侵害の類型"
+            },
+            "equivalents": {
+              "type": "object",
+              "description": "均等論の検討（該当時のみ）",
+              "properties": {
+                "applied": { "type": "boolean" },
+                "requirements": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "requirement": { "type": "string" },
+                      "satisfied": { "type": "boolean" },
+                      "reasoning": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            },
+            "invalidity_defense": {
+              "type": "object",
+              "description": "無効の抗弁（主張時のみ）",
+              "properties": {
+                "raised": { "type": "boolean" },
+                "grounds": { "type": "string" },
+                "result": { "type": "string" }
+              }
+            }
+          }
+        },
+        "conclusion": {
+          "type": "object",
+          "properties": {
+            "holding": { "type": "string", "description": "判決の結論" },
+            "damages": { "type": "string", "description": "損害額（認容時）" },
+            "implications": { "type": "string", "description": "実務上の示唆" }
+          }
+        }
+      }
+    },
+    "claim_chart": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "element_id": { "type": "string", "description": "構成要件ID (A, B, C...)" },
+          "claim_language": { "type": "string", "description": "クレーム文言" },
+          "accused_feature": { "type": "string", "description": "被告製品の対応構成" },
+          "court_finding": { "type": "string", "description": "裁判所の認定" },
+          "satisfied": { "type": "boolean", "description": "充足/非充足" }
+        }
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "キーワード"
+    },
+    "summary": {
+      "type": "string",
+      "description": "300文字程度の要約"
+    }
+  }
+}

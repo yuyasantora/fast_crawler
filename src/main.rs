@@ -1,6 +1,7 @@
 mod json_utils;
 mod llm;
 mod plugins;
+mod prompt;
 mod summarizer;
 mod traits;
 
