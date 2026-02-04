@@ -67,13 +67,17 @@ pub struct SearchResult {
 
 pub async fn search_judgments(
     keyword: Option<&str>,
-    _kenri: Option<&str>,
+    kenri: Option<&str>,
+    date_from: Option<&str>,  // YYYY-MM形式
+    date_to: Option<&str>,    // YYYY-MM形式
     limit: usize,
 ) -> Result<Vec<SearchResult>> {
     let client = Client::new();
     let url = "https://ipforce.jp/Hanketsu/search";
 
-    println!("🔍 Searching: {} (butsu={})", url, keyword.unwrap_or(""));
+    println!("🔍 Searching: {} (butsu={}, kenri={}, from={}, to={})",
+        url, keyword.unwrap_or(""), kenri.unwrap_or("all"),
+        date_from.unwrap_or(""), date_to.unwrap_or(""));
 
     // POST リクエストで検索
     let mut form = vec![
@@ -85,6 +89,33 @@ pub async fn search_judgments(
     if let Some(kw) = keyword {
         keyword_owned = kw.to_string();
         form.push(("butsu", &keyword_owned));
+    }
+
+    let kenri_owned: String;
+    if let Some(k) = kenri {
+        kenri_owned = k.to_string();
+        form.push(("kenri", &kenri_owned));
+    }
+
+    // 日付範囲（YYYY-MM形式をパース）
+    let (sby, sbm): (String, String);
+    if let Some(from) = date_from {
+        if let Some((y, m)) = from.split_once('-') {
+            sby = y.to_string();
+            sbm = m.to_string();
+            form.push(("sbY", &sby));
+            form.push(("sbM", &sbm));
+        }
+    }
+
+    let (sbyl, sbml): (String, String);
+    if let Some(to) = date_to {
+        if let Some((y, m)) = to.split_once('-') {
+            sbyl = y.to_string();
+            sbml = m.to_string();
+            form.push(("sbYl", &sbyl));
+            form.push(("sbMl", &sbml));
+        }
     }
 
     let body = client.post(url).form(&form).send().await?.text().await?;

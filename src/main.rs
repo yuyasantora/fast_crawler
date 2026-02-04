@@ -53,6 +53,8 @@ struct HealthResponse {
 struct SearchRequest {
     keyword: Option<String>,
     kenri: Option<String>,
+    date_from: Option<String>,
+    date_to: Option<String>,
     limit: Option<usize>,
 }
 
@@ -78,6 +80,8 @@ async fn search(Json(req): Json<SearchRequest>) -> (StatusCode, Json<SearchRespo
     let result = search_judgments(
         req.keyword.as_deref(),
         req.kenri.as_deref(),
+        req.date_from.as_deref(),
+        req.date_to.as_deref(),
         limit,
     )
     .await;

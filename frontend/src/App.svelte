@@ -3,11 +3,38 @@
   const PER_PAGE = 10;
 
   let keyword = '';
+  let kenri = '';
+  let dateFrom = '';
+  let dateTo = '';
   let results = [];
   let page = 0;
   let loading = false;
   let analyzing = null;
   let error = '';
+
+  const kenriOptions = [
+    { value: '', label: '全て' },
+    { value: '特許権', label: '特許権' },
+    { value: '商標権', label: '商標権' },
+    { value: '著作権', label: '著作権' },
+    { value: '意匠権', label: '意匠権' },
+    { value: '実用新案権', label: '実用新案権' },
+    { value: '不正競争', label: '不正競争' },
+    { value: '民事訴訟', label: '民事訴訟' },
+    { value: '行政訴訟', label: '行政訴訟' },
+  ];
+
+  const lawOptions = [
+    { value: '', label: '全て' },
+    { value: '特許法', label: '特許法' },
+    { value: '商標法', label: '商標法' },
+    { value: '著作権法', label: '著作権法' },
+    { value: '意匠法', label: '意匠法' },
+    { value: '実用新案法', label: '実用新案法' },
+    { value: '不正競争防止法', label: '不正競争防止法' },
+    { value: '民法', label: '民法' },
+    { value: '民事訴訟法', label: '民事訴訟法' },
+  ];
 
   $: totalPages = Math.ceil(results.length / PER_PAGE);
   $: pagedResults = results.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
@@ -22,7 +49,13 @@
       const res = await fetch(`${API_BASE}/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: keyword || null, limit: 100 })
+        body: JSON.stringify({
+          keyword: keyword || null,
+          kenri: kenri || null,
+          date_from: dateFrom || null,
+          date_to: dateTo || null,
+          limit: 100
+        })
       });
       const data = await res.json();
 
@@ -80,6 +113,11 @@
       placeholder="キーワード（例: 特許権侵害）"
       on:keydown={(e) => e.key === 'Enter' && search()}
     />
+    <select bind:value={kenri}>
+      {#each kenriOptions as opt}
+        <option value={opt.value}>{opt.label}</option>
+      {/each}
+    </select>
     <button on:click={search} disabled={loading}>
       {loading ? '検索中...' : '検索'}
     </button>
@@ -185,6 +223,42 @@
 
   .search-box input::placeholder {
     color: #666;
+  }
+
+  .search-box select {
+    padding: 0.75rem 1rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #e0e0e0;
+    cursor: pointer;
+    min-width: 120px;
+  }
+
+  .search-box select:focus {
+    outline: none;
+    border-color: #6a9fd9;
+  }
+
+  .search-box input[type="month"] {
+    padding: 0.75rem 0.5rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+    width: 130px;
+  }
+
+  .search-box input[type="month"]:focus {
+    outline: none;
+    border-color: #6a9fd9;
+  }
+
+  .date-separator {
+    color: #888;
+    padding: 0 0.25rem;
   }
 
   .search-box button {
