@@ -7,11 +7,11 @@
 
 // --- ヘッダー ---
 #align(center)[
-  #text(16pt, weight: "bold")[ {{ title }} ]
+  #text(16pt, weight: "bold")[ {{ case_info.title }} ]
   #v(0.5em)
-  #text(11pt, style: "italic")[ {{ case_no }} ]
+  #text(11pt, style: "italic")[ {{ case_info.case_no }} ]
   #h(1fr)
-  #text(10pt)[ 判決日: {{ date }} ]
+  #text(10pt)[ 判決日: {{case_info.date }} ]
 ]
 
 #line(length: 100%, stroke: 0.5pt)
@@ -26,7 +26,7 @@
 #v(1em)
 
 // --- 判決結果バッジ ---
-*結論:* #box(inset: 5pt, radius: 3pt, fill: black, outset: 0pt)[#text(fill: white, weight: "bold")[ {{ result }} ]]
+*結論:* #box(inset: 5pt, radius: 3pt, fill: black, outset: 0pt)[#text(fill: white, weight: "bold")[ {{ case_info.result }} ]]
 
 #v(0.5em)
 *Keywords:* {% for kw in keywords %}
@@ -52,10 +52,10 @@
 
   // Loop through Rust data
   {% for row in claim_chart %}
-    [ {{ row.requirement }} ],
-    [ {{ row.defendant }} ],
+    [ {{ row.claim_language }} ],
+    [ {{ row.accused_feature }} ],
     [
-      {% if row.is_satisfied %}
+      {% if row.satisfied %}
         #box(fill: rgb("e6f4ea"), inset: 6pt, radius: 4pt)[
           #text(fill: rgb("137333"), weight: "bold")[✔ 充足 / 一致]
         ]
@@ -65,7 +65,7 @@
         ]
       {% endif %}
       #v(0.5em)
-      #text(size: 9pt)[ {{ row.judgment }} ]
+      #text(size: 9pt)[ {{ row.court_finding }} ]
     ],
   {% endfor %}
 )

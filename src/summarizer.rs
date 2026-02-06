@@ -1,7 +1,6 @@
 /// 論理的読解法ベースのテキスト要約モジュール
 ///
 /// 形態素解析で接続詞を検出し、論理構造に基づいて重要文を抽出
-
 use anyhow::Result;
 use lindera::segmenter::{Segmenter, SegmenterConfig};
 use lindera::tokenizer::Tokenizer;
@@ -25,12 +24,7 @@ impl Summarizer {
 
     /// 重要文を抽出
     pub fn extract(&self, text: &str, max_chars: usize) -> Result<String> {
-        // 1. 文分割
-        let sentences = self.split_sentences(text);
 
-        if sentences.is_empty() {
-            return Ok(text.chars().take(max_chars).collect());
-        }
 
         // 2. 頻出語を抽出
         let word_freq = self.count_word_frequency(text)?;
@@ -59,6 +53,17 @@ impl Summarizer {
         Ok(result)
     }
 
+    /// チャンク分割
+    fn split_into_chunkcs<'a>(&self, text: &str, max_sentences: usize) -> Vec<<String>> {
+        let sentences = self.split_sentences(text);
+
+
+        if sentences.is_empty() {
+            return Ok(text.chars().take(max_sentences).collect());
+        }
+        chunks_num: usize = (sentences.len() / max_sentences) + 1;
+        for i in 
+    }
     /// 文分割
     fn split_sentences<'a>(&self, text: &'a str) -> Vec<&'a str> {
         let mut sentences = Vec::new();
@@ -157,10 +162,8 @@ impl Summarizer {
                 }
 
                 // 転換・対比系（中スコア）
-                if matches!(
-                    word,
-                    "しかし" | "ところが" | "だが" | "けれども" | "一方"
-                ) {
+                if matches!(word, "しかし" | "ところが" | "だが" | "けれども" | "一方")
+                {
                     return 2.0;
                 }
 

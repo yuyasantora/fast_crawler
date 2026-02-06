@@ -10,12 +10,78 @@ use std::fs;
 
 // --- Data Structures ---
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ClaimRow {
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct CaseInfo {
+    pub title: String,
+    pub case_no: String,
+    pub court: String,
+    pub date: String,
+    pub result: String,
+    pub patent_no: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IracIssue {
+    pub plaintiff_claim: String,
+    pub accused_product: String,
+    pub key_disputes: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IracRule {
+    pub applicable_law: Vec<String>,
+    pub claim_construction: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct EquivalentRequirement {
     pub requirement: String,
-    pub defendant: String,
-    pub judgment: String,
-    pub is_satisfied: bool,
+    pub satisfied: bool,
+    pub reasoning: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct Equivalents {
+    pub applied: bool,
+    pub requirements: Vec<EquivalentRequirement>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct InvalidityDefense {
+    pub raised: bool,
+    pub grounds: String,
+    pub result: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IracAnalysis {
+    pub infringement_type: String,
+    pub equivalents: Option<Equivalents>,
+    pub invalidity_defense: Option<InvalidityDefense>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IracConclusion {
+    pub holding: String,
+    pub damages: String,
+    pub implications: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct Irac {
+    pub issue: IracIssue,
+    pub rule: IracRule,
+    pub analysis: IracAnalysis,
+    pub conclusion: IracConclusion,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ClaimChartRow {
+    pub element_id: String,
+    pub claim_language: String,
+    pub accused_feature: String,
+    pub court_finding: String,
+    pub satisfied: bool,
 }
 
 #[derive(Template, Serialize, Deserialize, Debug)]
@@ -25,46 +91,38 @@ pub struct IpForcePatent {
     #[serde(skip)]
     pub case_id: u32,
 
-    // LLM出力データ
+    // LLM出力データ（IRAC構造）
     #[serde(default)]
-    pub title: String,
+    pub case_info: CaseInfo,
     #[serde(default)]
-    pub case_no: String,
+    pub irac: Irac,
     #[serde(default)]
-    pub date: String,
-    #[serde(default)]
-    pub result: String,
-    #[serde(default)]
-    pub summary: String,
+    pub claim_chart: Vec<ClaimChartRow>,
     #[serde(default)]
     pub keywords: Vec<String>,
     #[serde(default)]
-    pub claim_chart: Vec<ClaimRow>,
+    pub summary: String,
 }
 
 impl IpForcePatent {
     pub fn new(case_id: u32) -> Self {
         Self {
             case_id,
-            title: String::new(),
-            case_no: String::new(),
-            date: String::new(),
-            result: String::new(),
-            summary: String::new(),
-            keywords: vec![],
+            case_info: CaseInfo::default(),
+            irac: Irac::default(),
             claim_chart: vec![],
+            keywords: vec![],
+            summary: String::new(),
         }
     }
 
     /// パース済みデータからフィールドを更新
     pub fn update_from_parsed(&mut self, data: IpForcePatent) {
-        self.title = data.title;
-        self.case_no = data.case_no;
-        self.date = data.date;
-        self.result = data.result;
-        self.summary = data.summary;
-        self.keywords = data.keywords;
+        self.case_info = data.case_info;
+        self.irac = data.irac;
         self.claim_chart = data.claim_chart;
+        self.keywords = data.keywords;
+        self.summary = data.summary;
     }
 }
 
@@ -218,9 +276,11 @@ impl WebResource for IpForcePatent {
     }
 
     fn system_prompt(&self) -> String {
-        // 実行時にファイルから読み込む
-        fs::read_to_string("prompts/ip_force.md")
-            .unwrap_or_else(|_| "You are a helpful assistant.".to_string())
+        crate::prompt::patent_judgment_prompt()
+            .unwrap_or_else(|_| {
+                fs::read_to_string("prompts/ip_force.md")
+                    .unwrap_or_else(|_| "You are a helpful assistant.".to_string())
+            })
     }
 
     fn render(&self) -> Result<String> {

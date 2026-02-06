@@ -1,10 +1,8 @@
 /// プロンプト合成モジュール
 ///
 /// テンプレート + 各コンポーネントを合成して最終プロンプトを生成
-
 use anyhow::{Context, Result};
 use std::fs;
-use std::path::Path;
 
 /// プロンプトビルダー
 pub struct PromptBuilder {
@@ -19,8 +17,8 @@ pub struct PromptBuilder {
 impl PromptBuilder {
     /// テンプレートを読み込んで初期化
     pub fn new() -> Result<Self> {
-        let template = fs::read_to_string("prompts/_template.md")
-            .context("Failed to read prompt template")?;
+        let template =
+            fs::read_to_string("prompts/_template.md").context("Failed to read prompt template")?;
 
         Ok(Self {
             template,
@@ -34,36 +32,44 @@ impl PromptBuilder {
 
     /// Expert Attributes を設定
     pub fn with_attributes(mut self, path: &str) -> Result<Self> {
-        self.attributes = Some(fs::read_to_string(path)
-            .with_context(|| format!("Failed to read attributes: {}", path))?);
+        self.attributes = Some(
+            fs::read_to_string(path)
+                .with_context(|| format!("Failed to read attributes: {}", path))?,
+        );
         Ok(self)
     }
 
     /// Domain Knowledge を設定
     pub fn with_knowledge(mut self, path: &str) -> Result<Self> {
-        self.knowledge = Some(fs::read_to_string(path)
-            .with_context(|| format!("Failed to read knowledge: {}", path))?);
+        self.knowledge = Some(
+            fs::read_to_string(path)
+                .with_context(|| format!("Failed to read knowledge: {}", path))?,
+        );
         Ok(self)
     }
 
     /// Reasoning Framework を設定
     pub fn with_reasoning(mut self, path: &str) -> Result<Self> {
-        self.reasoning = Some(fs::read_to_string(path)
-            .with_context(|| format!("Failed to read reasoning: {}", path))?);
+        self.reasoning = Some(
+            fs::read_to_string(path)
+                .with_context(|| format!("Failed to read reasoning: {}", path))?,
+        );
         Ok(self)
     }
 
     /// Task Definition を設定
     pub fn with_task(mut self, path: &str) -> Result<Self> {
-        self.task = Some(fs::read_to_string(path)
-            .with_context(|| format!("Failed to read task: {}", path))?);
+        self.task = Some(
+            fs::read_to_string(path).with_context(|| format!("Failed to read task: {}", path))?,
+        );
         Ok(self)
     }
 
     /// Output Schema を設定
     pub fn with_schema(mut self, path: &str) -> Result<Self> {
-        self.schema = Some(fs::read_to_string(path)
-            .with_context(|| format!("Failed to read schema: {}", path))?);
+        self.schema = Some(
+            fs::read_to_string(path).with_context(|| format!("Failed to read schema: {}", path))?,
+        );
         Ok(self)
     }
 

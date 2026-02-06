@@ -6,6 +6,8 @@ mod summarizer;
 mod traits;
 
 use anyhow::Result;
+use axum::extract::Path;
+use axum::response::Response;
 use axum::{
     extract::State,
     http::StatusCode,
@@ -14,8 +16,6 @@ use axum::{
     Router,
 };
 use llm::LlmEngine;
-use axum::extract::Path;
-use axum::response::Response;
 use plugins::ip_force::{search_judgments, IpForcePatent, SearchResult};
 use serde::{Deserialize, Serialize};
 use std::process::Command;
@@ -113,23 +113,22 @@ async fn search(Json(req): Json<SearchRequest>) -> (StatusCode, Json<SearchRespo
 async fn download_pdf(Path(case_id): Path<u32>) -> Response {
     use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 
-    let pdf_path = format!("/home/engineer/fast_crawler/output/ip_force_{}.pdf", case_id);
+    let pdf_path = format!(
+        "/home/engineer/fast_crawler/output/ip_force_{}.pdf",
+        case_id
+    );
 
     match tokio::fs::read(&pdf_path).await {
-        Ok(data) => {
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "application/pdf")
-                .header(CONTENT_DISPOSITION, "attachment; filename=\"report.pdf\"")
-                .body(axum::body::Body::from(data))
-                .unwrap()
-        }
-        Err(_) => {
-            Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(axum::body::Body::empty())
-                .unwrap()
-        }
+        Ok(data) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/pdf")
+            .header(CONTENT_DISPOSITION, "attachment; filename=\"report.pdf\"")
+            .body(axum::body::Body::from(data))
+            .unwrap(),
+        Err(_) => Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body(axum::body::Body::empty())
+            .unwrap(),
     }
 }
 
@@ -184,7 +183,7 @@ async fn process_case(state: &AppState, case_id: u32) -> Result<(String, String,
 
     // 3. パース済みデータを適用
     patent.update_from_parsed(parsed);
-    println!("📊 Parsed: {}", patent.title);
+    println!("📊 Parsed: {}", patent.case_info.title);
 
     // 4. Typst レンダリング
     let typst_source = patent.render()?;
@@ -205,7 +204,11 @@ async fn process_case(state: &AppState, case_id: u32) -> Result<(String, String,
     }
 
     println!("✅ Generated: {}", pdf_path);
-    Ok((patent.title.clone(), patent.case_no.clone(), pdf_path))
+    Ok((
+        patent.case_info.title.clone(),
+        patent.case_info.case_no.clone(),
+        pdf_path,
+    ))
 }
 
 #[tokio::main]
